@@ -1,0 +1,39 @@
+{
+    "name": "Notion LM(LifeManagement Automations)",
+    "version": "2.0.0",
+    "description": "Automations to work with Sunny's Notion LM templates",
+    "manifest_version": 3,
+    "author": "Sunny Dsouza",
+    "action":{
+        "default_popup": "index.html",
+        "default_title": "Notion LifeManagement"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.notion.so/*",
+                "*://*.notion.site/*"
+            ],
+            "run_at": "document_end",
+            "css": ["css/style.css","css/jquery-ui.css","css/bootstrap.min.css","css/bootstrap-datepicker3.min.css"],
+            "js": [
+                "js/jquery.min.js"
+                ,"js/jquery-ui.js"
+                ,"js/waitForKeyElements.js"
+                ,"js/popper.min.js"
+                ,"js/bootstrap.min.js"
+                ,"js/bootstrap-datepicker.min.js"
+                ,"js/content.bundle.js"
+            ]
+        }
+        
+    ],
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": false
+      },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' 'unsafe-eval';"
+    },
+    "homepage_url": "https://github.com/sunnydsouza/notion-lm-crx/"
+}

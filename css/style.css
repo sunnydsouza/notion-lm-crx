@@ -1,0 +1,22 @@
+/* label, input { display:block; }
+input.text { margin-bottom:12px; width:95%; padding: .4em; }
+fieldset { padding:0; border:0; margin-top:25px; }
+h1 { font-size: 1.2em; margin: .6em 0; }
+#loghours-btn , #countdown, .plantoday-btn, .multi-loghours-btn, .clear-multi-btn {
+display:inline-block;
+}
+.btn {
+  display:inline-block;
+  padding: 6px 6px;
+  font-size: 15px;
+}
+.helper-btn {
+  display:inline-flex;
+} */
+
+.dropdown-menu.show {
+  display: inline-table !important;
+}
+/* .ui-datepicker {
+  z-index: 2051 !important;
+} */
