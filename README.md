@@ -4,4 +4,4 @@ A chrome extension which works with notion-lm-api to achieve automation in Notio
 # Tools used #
 * HTML, CSS and JavaScript
 
-Author [Saunny Dsouza](https://sunnydsouza.com)
+Author [Sunny Dsouza](https://sunnydsouza.com)
