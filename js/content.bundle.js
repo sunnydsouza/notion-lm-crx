@@ -1630,12 +1630,3 @@ const waitFor = (...selectors) =>
     };
     f();
   });
-
-chrome.tabs.query(
-  {
-    audible: !0,
-  },
-   function (tabs) {
-    tabURL = tabs[0].url;
-    console.log("URL from get-url.js", tabURL);
-   });
