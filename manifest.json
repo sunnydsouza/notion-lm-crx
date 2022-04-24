@@ -1,29 +1,29 @@
 {
-    "name": "Notion LM(LifeManagement) Automations",
-    "version": "1.0.0",
-    "description": "Automations to work with Sunny's Notion LM templates",
-    "manifest_version": 3,
-    "author": "Sunny Dsouza",
-    "content_scripts": [
-        {
-            "matches": [
-                "*://*.notion.so/*",
-                "*://*.notion.site/*"
-            ],
-            "run_at": "document_end",
-            "css": ["css/style.css","css/jquery-ui.css"],
-            "js": [
-                "js/jquery.min.js"
-                ,"js/jquery-ui.js"
-                ,"js/waitForKeyElements.js"
-                ,"js/jquery-ui.multidatespicker.js"
-                ,"js/content.bundle.js"
-            ]
-        }
-        
-    ],
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' 'unsafe-eval';"
-    },
-    "homepage_url": "https://github.com/sunnydsouza/notion-lm-crx"
+  "name": "Notion LM(LifeManagement) Automations",
+  "version": "1.0.0",
+  "description": "Automations to work with Sunny's Notion LM templates",
+  "manifest_version": 3,
+  "author": "Sunny Dsouza",
+  "content_scripts": [
+    {
+      "matches": ["*://*.notion.so/*", "*://*.notion.site/*"],
+      "run_at": "document_end",
+      "css": ["css/style.css", "css/jquery-ui.css"],
+      "js": [
+        "js/jquery.min.js",
+        "js/jquery-ui.js",
+        "js/waitForKeyElements.js",
+        "js/jquery-ui.multidatespicker.js",
+        "js/content.bundle.js"
+      ]
+    }
+  ],
+  "icons": {
+    "48": "icons/lm4/icon48.png",
+    "128": "icons/lm4/icon48.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' 'unsafe-eval';"
+  },
+  "homepage_url": "https://github.com/sunnydsouza/notion-lm-crx"
 }
