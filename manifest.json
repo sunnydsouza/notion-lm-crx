@@ -5,7 +5,7 @@
     "manifest_version": 3,
     "author": "Sunny Dsouza",
     "action":{
-        "default_popup": "index.html",
+        "default_popup": "popup.html",
         "default_title": "Notion LifeManagement"
     },
     "content_scripts": [
@@ -15,7 +15,7 @@
                 "*://*.notion.site/*"
             ],
             "run_at": "document_end",
-            "css": ["css/style.css","css/jquery-ui.css","css/bootstrap.min.css","css/bootstrap-datepicker3.min.css"],
+            "css": ["css/style.css","css/jquery-ui.css","css/bootstrap.min.css","css/bootstrap-datepicker3.min.css","css/growl.colored-theme.min.css"],
             "js": [
                 "js/jquery.min.js"
                 ,"js/jquery-ui.js"
@@ -23,11 +23,16 @@
                 ,"js/popper.min.js"
                 ,"js/bootstrap.min.js"
                 ,"js/bootstrap-datepicker.min.js"
+                ,"js/growl-notification.min.js"
                 ,"js/content.bundle.js"
             ]
         }
         
     ],
+    "icons": {
+        "48": "icons/lm4/icon48.png",
+        "128": "icons/lm4/icon128.png"
+      },
     "options_ui": {
         "page": "options.html",
         "open_in_tab": false
