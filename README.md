@@ -1,4 +1,4 @@
-# notion-lm-crx
+# <img src="icons/lm4/icon48.png" style="width:10%"/> Notion LifeManagement (Chrome Extension)
 A chrome extension which works with notion-lm-api to achieve automation in Notion workspace.
 
 
@@ -7,7 +7,7 @@ Also, the automations with this extension, **ONLY** works on [Sunny's Notion Lif
 
 This is a chrome extension which works alongside the Notion LM Api (designed in Python Flask). There is also a version of this which works as a tampermonkey script. 
 
-This is basically the improvized version over version 1. Please view the screenshots and documention below
+This is basically the improvized version over [version 1.0.0](https://github.com/sunnydsouza/notion-lm-crx/releases/tag/V1.0.1). Please view the screenshots and documention below
 
 ### Installation instructions
 
@@ -44,12 +44,12 @@ On successful load, you should be able to see the extension loaded as below 🥳
 Basically, the extension dynamically adds  options (in form of buttons) on feature task pages/ Idea task list/ GTD pages sub tasks pages. The extension is basically to help manage tasks by providing the below options
 
 ### Improvements in version > V2.0.0
-- All forms are now migrated from JQueryUI to Bootstrap. They are much more compact, refined and has a elegant polished look
+- All forms are now migrated from JQueryUI to Bootstrap. They are much more compact, refined and has a more elegant polished look.
 - Automation forms now include robust validations (Check screenshots below)
-- Beatiful notifications on status of automations (Growl notifications)
+- Beautiful notifications on status of automations (Growl notifications)
 
 ## How and where is the extension option shown
-The extension dynamically adds a dropdown menu wherever the notion view name matches keywords like "This features task list"/"This idea task list"/ "Todays task"/"GTD Sessions"
+The extension dynamically adds a dropdown menu wherever the notion view name matches keywords like `This features task list`,`This idea task list`,`Todays task`,`GTD Sessions`
 
 ![extension menu](docs/images/v2.0.0/screenshot1.png)
 
