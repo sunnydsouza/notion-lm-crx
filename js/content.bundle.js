@@ -1,15 +1,17 @@
 var startTimer = false;
 let gIndex = 1;
 let addedPlanToIndividualTaskPage = false;
+const pollIntervalNotionLMHelperButtons = 10000;
 let ON_FEATURE_PAGE = false;
 let ON_RELEASE_PAGE = false;
 //let API_URL="https://192.168.0.128:8100";  //local machine macos
-let API_URL = "https://192.168.0.109:8100"; //server
+let API_URL = "https://192.168.0.128:8200"; //server
 let NHA_TRIGGER_WORDS = [
   "This idea task list",
   "This feature tasks list",
   "Todays Task",
   "Sub tasks",
+  "Project distribution view",
 ];
 let BTN_GEN_MAP = {
   "This idea task list": "Plan,Log,Done,Clear",
@@ -28,23 +30,32 @@ waitForKeyElements(".notranslate:contains('Any Notes here')", addNotesHere);
 //Project specific pages
 waitForKeyElements(
   "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('This idea task list')",
-  multiTaskHelper
+  addNotionLMTaskHelper
 );
 
 waitForKeyElements(
   "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('This feature tasks list')",
-  multiTaskHelper
+  addNotionLMTaskHelper
 );
 
-//waitForKeyElements ("div.notion-focusable:contains('Todays Task')", multiTaskHelper);
 waitForKeyElements(
   "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('Todays Task')",
-  multiTaskHelper
+  addNotionLMTaskHelper
+);
+
+waitForKeyElements(
+  "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('Project distribution view')",
+  addNotionLMTaskHelper
+);
+
+waitForKeyElements(
+  "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('GTD Sessions')",
+  autoApplyFilterToGtdSessionsView
 );
 
 waitForKeyElements(
   "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('Sub tasks')",
-  multiTaskHelper
+  addNotionLMTaskHelper
 );
 
 //waitForKeyElements (".notion-focusable:contains('Open as page')", openFullScreen);
@@ -56,6 +67,27 @@ function addNotesHere(jNode) {
         .parents("div.notion-sub_sub_header-block")
         .attr("data-block-id")
   );
+}
+
+function growlNotification() {
+  GrowlNotification.notify({
+    title: "Well Done!",
+    description: "You just submit your resume successfully.",
+    type: "success",
+    position: "top-right",
+    closeTimeout: 0,
+    showButtons: true,
+    buttons: {
+      action: {
+        text: "Ok",
+        callback: function () {},
+      },
+      cancel: {
+        text: "Cancel",
+        callback: function () {},
+      },
+    },
+  });
 }
 
 function onWhichPage() {
@@ -76,7 +108,7 @@ function onWhichPage() {
   }
 }
 
-function dynamicNHADivs() {
+function dynamicNLMDivs() {
   let nhaDivs = "";
   for (let i = 0; i < NHA_TRIGGER_WORDS.length; i++) {
     //nhaDivs += "div.notion-focusable:contains('"+NHA_TRIGGER_WORDS[i]+"'),";
@@ -92,13 +124,13 @@ function dynamicNHADivs() {
     : nhaDivs;
 }
 
-function refreshMultiTaskHelperButtons(jNode, gIndex) {
+function refreshNotionLMHelperButtons(jNode, gIndex) {
   onWhichPage();
   var taskIds = [];
   var colHeader = [];
-  console.log("dynamicNHADivs:" + dynamicNHADivs());
-  //closest('.notion-table-view-header-cell')
-  $(dynamicNHADivs())
+  // console.log("dynamicNLMDivs:" + dynamicNLMDivs());
+
+  $(dynamicNLMDivs())
     .closest(".notion-collection_view-block")
     .parent()
     .parent()
@@ -110,17 +142,16 @@ function refreshMultiTaskHelperButtons(jNode, gIndex) {
         .each(function (index, value) {
           colHeader.push($(this).text());
         });
-      //console.log(colHeader);
+
       colHeader = Array.from(new Set(colHeader));
-      console.log(colHeader);
+      // console.log(colHeader);
 
       if (colHeader.includes("SNH")) {
         console.log("SNH col identified at:" + colHeader.indexOf("SNH"));
         let snhHeaderColLoc =
           ":nth-child(" + (colHeader.indexOf("SNH") + 1) + ")";
         console.log(snhHeaderColLoc);
-        //$(dynamicNHADivs()).closest(".notion-collection_view-block").parents(".notion-collection_view-block")
-        //    .children("div").eq(1).find("div.notion-collection-item").each(function( index, value) {
+
         $(this)
           .find("div.notion-collection-item")
           .each(function (index, value) {
@@ -130,7 +161,7 @@ function refreshMultiTaskHelperButtons(jNode, gIndex) {
 
             //console.log($( this ).children().eq(1).html());
             console.log(
-              "Added refreshMultiTaskHelperButtons:" +
+              "Added refreshNotionLMHelperButtons:" +
                 $(this).attr("data-block-id")
             );
             if (
@@ -153,7 +184,7 @@ function refreshMultiTaskHelperButtons(jNode, gIndex) {
               $(this).css({ textDecoration: "initial", opacity: 1 });
             }
             console.log(
-              "Added refreshMultiTaskHelperButtons:" +
+              "Added refreshNotionLMHelperButtons:" +
                 $(this).attr("data-block-id")
             );
           });
@@ -163,55 +194,279 @@ function refreshMultiTaskHelperButtons(jNode, gIndex) {
   console.log(taskIds);
 }
 
-function multiTaskHelper(jNode) {
+function addNotionLMTaskHelper(jNode) {
   console.log(jNode[0].textContent);
   var color = $(jNode[0]).css("color");
   console.log("color:" + color);
   //if(color === "rgb(55, 53, 47)")
   //{
-  console.log("Adding multi task helper options");
+  console.log("Adding notion life management task helper options");
 
-  var tempDiv = document.createElement("div");
-  tempDiv.classList.add("helper-btn");
-  tempDiv.id = "g" + gIndex;
+  var notionLMButton = document.createElement("div");
+  notionLMButton.classList.add("helper-btn");
+  notionLMButton.id = "g" + gIndex;
 
-  tempDiv.innerHTML = generateButton(jNode[0].textContent, gIndex);
+  // tempDiv.innerHTML = generateButton(jNode[0].textContent, gIndex);
+  notionLMButton.innerHTML = generatePlanButton(gIndex);
 
-  jNode[0].parentNode.parentNode.append(tempDiv);
+  jNode[0].parentNode.parentNode.append(notionLMButton);
 
+  //If this is a features page, then apply filters to the tasks database to auto apply the projects, release
   if (jNode[0].textContent == "This feature tasks list") {
-    console.log(
-      "feature_tasklist_view:" +
-        $(jNode[0])
-          .parents(".notion-collection_view-block")
-          .children()
-          .children(":nth-child(2)")
-          .find("a")
-          .attr("href")
-    );
-    console.log("page_url:" + $(location).attr("href"));
-    $.post(API_URL + "/notionhelper/api/v1/featurestasklistfilter", {
-      feature_tasklist_view: $(jNode[0])
-        .parents(".notion-collection_view-block")
-        .children()
-        .children(":nth-child(2)")
-        .find("a")
-        .attr("href"),
-      page_url: $(location).attr("href"),
-    }).done(function (data) {
-      alert("Successful set the filter for this features tasks list");
-    });
+    autoApplyFilterToFeatureTaskList(jNode[0]);
   }
+
+  //If this is a GTD page, then apply filters to Todays task to filter by current date
+  if (jNode[0].textContent == "Todays Task") {
+    autoApplyFilterToGtdTasksView(jNode[0]);
+  }
+
+  // //If this is a features page, then apply filters to the tasks database to auto apply the projects, release
+  // if (jNode[0].textContent == "This feature tasks list") {
+  //   console.log(
+  //     "feature_tasklist_view:" +
+  //       $(jNode[0])
+  //         .parents(".notion-collection_view-block")
+  //         .children()
+  //         .children(":nth-child(2)")
+  //         .find("a")
+  //         .attr("href")
+  //   );
+  //   console.log("Applying fiters to page_url:" + $(location).attr("href"));
+  //   GrowlNotification.notify({
+  //     title: "Notion LM Helper",
+  //     description: "Applying filters to current features -> tasks database",
+  //     closeTimeout: 5000,
+  //     type: "info",
+  //     // showProgress: true,
+  //   });
+  //   $.post(API_URL + "/notionhelper/api/v1/featurestasklistfilter", {
+  //     feature_tasklist_view: $(jNode[0])
+  //       .parents(".notion-collection_view-block")
+  //       .children()
+  //       .children(":nth-child(2)")
+  //       .find("a")
+  //       .attr("href"),
+  //     page_url: $(location).attr("href"),
+  //   }).done(function (data) {
+  //     // alert("Successful set the filter for this features tasks list");
+  //     GrowlNotification.notify({
+  //       title: "Notion LM Helper",
+  //       description:
+  //         "Successfully applied filters (Projects/Release) to current features -> tasks database",
+  //       closeTimeout: 5000,
+  //       type: "success",
+  //     });
+  //   });
+  // }
 
   setTimeout(
     setInterval(() => {
-      refreshMultiTaskHelperButtons(jNode, gIndex);
-    }, 10000),
+      refreshNotionLMHelperButtons(jNode, gIndex);
+    }, pollIntervalNotionLMHelperButtons),
     3000
   );
 
   gIndex++;
   //}
+}
+
+function autoApplyFilterToFeatureTaskList(databaseView) {
+  // //If this is a features page, then apply filters to the tasks database to auto apply the projects, release
+  // if (jNode[0].textContent == "This feature tasks list") {
+  console.log(
+    "feature_tasklist_view:" +
+      $(databaseView)
+        .parents(".notion-collection_view-block")
+        .children()
+        .children(":nth-child(2)")
+        .find("a")
+        .attr("href")
+  );
+  console.log("Applying fiters to page_url:" + $(location).attr("href"));
+  GrowlNotification.notify({
+    title: "Notion LM Helper",
+    description: "Applying filters to current features -> tasks database",
+    closeTimeout: 5000,
+    animation: {
+      open: "slide-in",
+      close: "slide-out",
+    },
+    type: "info",
+    // showProgress: true,
+  });
+  $.post(API_URL + "/notionhelper/api/v1/featurestasklistfilter", {
+    feature_tasklist_view: $(databaseView)
+      .parents(".notion-collection_view-block")
+      .children()
+      .children(":nth-child(2)")
+      .find("a")
+      .attr("href"),
+    page_url: $(location).attr("href"),
+  }).done(function (result) {
+    // alert("Successful set the filter for this features tasks list");
+    const resultJson=JSON.parse(result);
+    if(resultJson.status=="Success") {
+    GrowlNotification.notify({
+      title: "Notion LM Helper",
+      description:
+        "Successfully applied filters (Projects/Release) to current features -> tasks database",
+      closeTimeout: 5000,
+      animation: {
+        open: "slide-in",
+        close: "slide-out",
+      },
+      type: "success",
+    });
+  } else {
+    GrowlNotification.notify({
+      title: "Notion LM Helper",
+      description:
+        "Failed to apply filters (Projects/Release) to current features -> tasks database",
+      closeTimeout: 5000,
+      animation: {
+        open: "slide-in",
+        close: "slide-out",
+      },
+      type: "error",
+    });
+  }
+  });
+  // }
+}
+
+function autoApplyFilterToGtdTasksView(databaseView) {
+  
+  console.log(
+    "collection_view:" +
+      $(databaseView)
+        .parents(".notion-collection_view-block")
+        .children()
+        .children(":nth-child(2)")
+        .find("a")
+        .attr("href")
+  );
+  console.log("Applying GTD task filter to page_url:" + $(location).attr("href"));
+  GrowlNotification.notify({
+    title: "Notion LM Helper",
+    description: "Applying filters to GTD tasks view",
+    closeTimeout: 5000,
+    animation: {
+      open: "slide-in",
+      close: "slide-out",
+    },
+    type: "info",
+    // showProgress: true,
+  });
+
+  var dateYYYYMMDD = new Date(
+    new Date().getTime() - new Date().getTimezoneOffset() * 60000
+  )
+    .toISOString()
+    .split("T")[0];
+    console.log("dateYYYYMMDD:" + dateYYYYMMDD);
+  $.post(API_URL + "/notionhelper/api/v1/applycollectionviewfilter", {
+    collection_view: $(databaseView)
+      .parents(".notion-collection_view-block")
+      .children()
+      .children(":nth-child(2)")
+      .find("a")
+      .attr("href"),
+    day: dateYYYYMMDD,
+  }).done(function (result) {
+    // alert("Successful set the filter for this features tasks list");
+    const resultJson = JSON.parse(result);
+    if (resultJson.status == "Success") {
+      GrowlNotification.notify({
+        title: "Notion LM Helper",
+        description: "Successfully applied filters to GTD tasks view",
+        closeTimeout: 5000,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "success",
+      });
+    } else {
+      GrowlNotification.notify({
+        title: "Notion LM Helper",
+        description: "Failed to apply filters to GTD tasks view",
+        closeTimeout: 5000,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "error",
+      });
+    }
+  });
+}
+
+function autoApplyFilterToGtdSessionsView(jNode) {
+  var databaseView=jNode[0];
+  console.log(
+    "collection_view:" +
+      $(databaseView)
+        .parents(".notion-collection_view-block")
+        .children()
+        .children(":nth-child(2)")
+        .find("a")
+        .attr("href")
+  );
+  console.log("Applying GTD sessions filter to page_url:" + $(location).attr("href"));
+  GrowlNotification.notify({
+    title: "Notion LM Helper",
+    description: "Applying filters to GTD sessions view",
+    closeTimeout: 5000,
+    animation: {
+      open: "slide-in",
+      close: "slide-out",
+    },
+    type: "info",
+    // showProgress: true,
+  });
+
+  var dateYYYYMMDD = new Date(
+    new Date().getTime() - new Date().getTimezoneOffset() * 60000
+  )
+    .toISOString()
+    .split("T")[0];
+    console.log("dateYYYYMMDD:" + dateYYYYMMDD);
+  $.post(API_URL + "/notionhelper/api/v1/applycollectionviewfilter", {
+    collection_view: $(databaseView)
+      .parents(".notion-collection_view-block")
+      .children()
+      .children(":nth-child(2)")
+      .find("a")
+      .attr("href"),
+    day: dateYYYYMMDD,
+  }).done(function (result) {
+    // alert("Successful set the filter for this features tasks list");
+    const resultJson = JSON.parse(result);
+    if (resultJson.status == "Success") {
+      GrowlNotification.notify({
+        title: "Notion LM Helper",
+        description: "Successfully applied filters to GTD sessions view",
+        closeTimeout: 5000,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "success",
+      });
+    } else {
+      GrowlNotification.notify({
+        title: "Notion LM Helper",
+        description: "Failed to apply filters to GTD sessions view",
+        closeTimeout: 5000,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "error",
+      });
+    }
+  });
 }
 
 function generateButton(currentPage, gIndex) {
@@ -305,35 +560,35 @@ function generatePlanButton(gIndex) {
   </div>`;
 }
 
-function generateDoneButton(gIndex) {
-  return (
-    '<button id="multi-done-btn-' +
-    gIndex +
-    '" data-text="g' +
-    gIndex +
-    '" class="multi-done-btn btn">Done</button>'
-  );
-}
+// function generateDoneButton(gIndex) {
+//   return (
+//     '<button id="multi-done-btn-' +
+//     gIndex +
+//     '" data-text="g' +
+//     gIndex +
+//     '" class="multi-done-btn btn">Done</button>'
+//   );
+// }
 
-function generateLogButton(gIndex) {
-  return (
-    '<button id="multi-loghours-btn-' +
-    gIndex +
-    '" data-text="g' +
-    gIndex +
-    '" class="multi-loghours-btn btn" value="Multi Log Hours">Log</button>'
-  );
-}
+// function generateLogButton(gIndex) {
+//   return (
+//     '<button id="multi-loghours-btn-' +
+//     gIndex +
+//     '" data-text="g' +
+//     gIndex +
+//     '" class="multi-loghours-btn btn" value="Multi Log Hours">Log</button>'
+//   );
+// }
 
-function generateClearAllButton(gIndex) {
-  return (
-    '<button id="clear-multi-btn-' +
-    gIndex +
-    '" data-text="g' +
-    gIndex +
-    '" class="clear-multi-btn btn">Clear</button>'
-  );
-}
+// function generateClearAllButton(gIndex) {
+//   return (
+//     '<button id="clear-multi-btn-' +
+//     gIndex +
+//     '" data-text="g' +
+//     gIndex +
+//     '" class="clear-multi-btn btn">Clear</button>'
+//   );
+// }
 
 function openFullScreen(jNode) {
   console.log("Open full screen");
@@ -365,59 +620,59 @@ function addPlanButton(taskid) {
 }
 
 $(document).ready(function () {
-  jQuery(document.body).on("click", "#plantoday-btn-ind", function () {
-    $("#plan-form-taskid").val($(this).attr("data-text"));
-    plan_form.dialog("open");
+  // jQuery(document.body).on("click", "#plantoday-btn-ind", function () {
+  //   $("#plan-form-taskid").val($(this).attr("data-text"));
+  //   plan_form.dialog("open");
 
-    //plan_form;
-  });
+  //   //plan_form;
+  // });
 
-  jQuery(document.body).on("click", ".plantoday-btn", function () {
-    console.log("Registered click on Plan");
-    var taskids = ""; //recreate tasks
-    $(".multi-ind-checkbox").each(function () {
-      if ($(this).prop("checked") == true) {
-        taskids = taskids + $(this).attr("data-text") + ",";
-      }
-    });
+  // jQuery(document.body).on("click", ".plantoday-btn", function () {
+  //   console.log("Registered click on Plan");
+  //   var taskids = ""; //recreate tasks
+  //   $(".multi-ind-checkbox").each(function () {
+  //     if ($(this).prop("checked") == true) {
+  //       taskids = taskids + $(this).attr("data-text") + ",";
+  //     }
+  //   });
 
-    $("#plan-form-taskid").val(taskids);
-    plan_form.dialog("open");
+  //   $("#plan-form-taskid").val(taskids);
+  //   plan_form.dialog("open");
 
-    //plan_form;
-  });
+  //   //plan_form;
+  // });
 
-  jQuery(document.body).on("click", ".multi-loghours-btn", function () {
-    console.log("Registered click on Multi Hours log");
-    var taskids = ""; //recreate tasks
-    $(".multi-ind-checkbox").each(function () {
-      if ($(this).prop("checked") == true) {
-        taskids = taskids + $(this).attr("data-text") + ",";
-      }
-    });
+  // jQuery(document.body).on("click", ".multi-loghours-btn", function () {
+  //   console.log("Registered click on Multi Hours log");
+  //   var taskids = ""; //recreate tasks
+  //   $(".multi-ind-checkbox").each(function () {
+  //     if ($(this).prop("checked") == true) {
+  //       taskids = taskids + $(this).attr("data-text") + ",";
+  //     }
+  //   });
 
-    $("#nh-logged-hrs-taskid").val(taskids);
+  //   $("#nh-logged-hrs-taskid").val(taskids);
 
-    logged_hrs_form.dialog("open");
+  //   logged_hrs_form.dialog("open");
 
-    //pomotimerButtonEventHandler();
-  });
+  //   //pomotimerButtonEventHandler();
+  // });
 
-  jQuery(document.body).on("click", ".multi-done-btn", function () {
-    console.log("Registered click on Multi Done button");
-    var taskids = ""; //recreate tasks
-    $(".multi-ind-checkbox").each(function () {
-      if ($(this).prop("checked") == true) {
-        taskids = taskids + $(this).attr("data-text") + ",";
-      }
-    });
+  // jQuery(document.body).on("click", ".multi-done-btn", function () {
+  //   console.log("Registered click on Multi Done button");
+  //   var taskids = ""; //recreate tasks
+  //   $(".multi-ind-checkbox").each(function () {
+  //     if ($(this).prop("checked") == true) {
+  //       taskids = taskids + $(this).attr("data-text") + ",";
+  //     }
+  //   });
 
-    $("#nh-done-task-taskid").val(taskids);
+  //   $("#nh-done-task-taskid").val(taskids);
 
-    dialog_nh_done_task.dialog("open");
+  //   dialog_nh_done_task.dialog("open");
 
-    //pomotimerButtonEventHandler();
-  });
+  //   //pomotimerButtonEventHandler();
+  // });
 
   jQuery(document.body).on("click", ".clear-multi-btn", function () {
     console.log("Registered click on Multi Done button");
@@ -472,6 +727,41 @@ $(document).ready(function () {
       clearInterval(interval);
     }
   });
+
+  $("#plan-form-datepicker").datepicker({
+    format: "yyyy-mm-dd",
+    multidate: true,
+    todayHighlight: true,
+    clearBtn: true,
+  }); //Listen for the change event on the input
+
+  $("#nh-logged-hrs-worked-on-days").datepicker({
+    format: "yyyy-mm-dd",
+    multidate: true,
+    todayHighlight: true,
+    clearBtn: true,
+  });
+
+  $("#nh-done-task-completed-date").datepicker({
+    format: "yyyy-mm-dd",
+    multidate: false,
+    todayHighlight: true,
+    clearBtn: true,
+  });
+
+  $("#nh-done-task-worked-on-days").datepicker({
+    format: "yyyy-mm-dd",
+    multidate: true,
+    todayHighlight: true,
+    clearBtn: true,
+  });
+
+  $("#nh-done-task-repeat-task").datepicker({
+    format: "yyyy-mm-dd",
+    multidate: false,
+    todayHighlight: true,
+    clearBtn: true,
+  });
 });
 // showDoneTaskModalForm(this,id);
 
@@ -509,7 +799,7 @@ function addNotionLogHours(jNode) {
   //         checkPomoStatus();
   //     });
 
-  logged_hrs_form;
+  // logged_hrs_form;
   //pomotimerButtonEventHandler();
 }
 
@@ -617,100 +907,6 @@ function showDoneTaskModalForm(node, id) {
   }
 }
 
-/////////////////////////////// PLAN TASK ///////////////////////////////////////////
-
-// $(`                                                         \
-// <div id="plan-dialog" title="Plan">
-// <form id="plan-form">
-// <fieldset>
-// <label for="taskid">TaskId</label>
-// <input type="text" name="plan-form-taskid" id="plan-form-taskid" value="" class="text ui-widget-content ui-corner-all">
-// <label for="date">Date</label>
-// <input type="text" name="plan-form-datepicker" id="plan-form-datepicker">
-// <br/>
-// <label for="plan">Plan</label>
-// <select class="nh-select-menu" name="plan" id="plan">
-// <option selected="selected">Today</option>
-// <option>Tomorow</option>
-// <option>This week</option>
-// <option>This month</option>
-// </select>
-// <br/>
-// <label for="plan-priority">Priority</label>
-// <select class="nh-select-menu" name="plan-priority" id="plan-priority">
-// <option selected="selected">--None--</option>
-// <option>P1 🔥</option>
-// <option>P2</option>
-// <option>P3</option>
-// </select>
-
-// <!-- Allow form submission with keyboard without duplicating the dialog button -->
-// <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-// </fieldset>
-// </form>
-// </div>
-// `).appendTo('body');
-
-/////////////////////////////// DONE TASK ///////////////////////////////////////////
-
-// $(`
-// <div id="nh-done-task" title="Done!">
-// <form id="nh-done-task-form">
-// <fieldset>
-// <label for="nh-done-task-taskid">TaskId</label>
-// <input type="text" name="nh-done-task-taskid" id="nh-done-task-taskid" value="null" class="text ui-widget-content ui-corner-all">
-// <label for="nh-done-task-title">Title</label>
-// <input type="text" name="nh-done-task-title" id="nh-done-task-title" value="" class="text ui-widget-content ui-corner-all">
-// <label for="date">Completed Date</label>
-// <input type="text" name="nh-done-task-completed-date" id="nh-done-task-completed-date">
-// <label for="worked-on-dates">Worked on dates</label>
-// <input type="text" name="nh-done-task-worked-on-days" id="nh-done-task-worked-on-days">
-// <br/>
-// <label for="plan-priority">Priority</label>
-// <select class="nh-select-menu" name="nh-done-task-plan-priority" id="nh-done-task-plan-priority">
-// <option selected="selected">--None--</option>
-// <option>P1 🔥</option>
-// <option>P2</option>
-// <option>P3</option>
-// </select>
-// <label for="loghours">Log Hours</label>
-// <input type="text" name="nh-done-task-log-hrs">
-// <label for="repeat-task">Repeat Task</label>
-// <input type="text" name="nh-done-task-repeat-task" id="nh-done-task-repeat-task">
-// <!-- Allow form submission with keyboard without duplicating the dialog button -->
-// <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-// </fieldset>
-// </form>
-// </div>
-// `).appendTo("body");
-
-/////////////////////////////// LOGGED HOURS ///////////////////////////////////////////
-
-// $(`
-// <div id="nh-logged-hrs" title="Log Hours!">
-// <form id="nh-logged-hrs-form">
-// <fieldset>
-// <label for="nh-logged-hrs-taskid">TaskId</label>
-// <input type="text" name="nh-logged-hrs-taskid" id="nh-logged-hrs-taskid" value="null" class="text ui-widget-content ui-corner-all">
-// <label for="nh-logged-hrs-title">Title</label>
-// <input type="text" name="nh-logged-hrs-title" id="nh-logged-hrs-title" value="Working on task" class="text ui-widget-content ui-corner-all">
-// <label for="worked-on-dates">Worked on dates</label>
-// <input type="text" name="nh-logged-hrs-worked-on-days" id="nh-logged-hrs-worked-on-days">
-// <br/>
-// <label for="loghours">Log Hours</label>
-// <input type="text" name="nh-logged-hrs-log-hrs">
-// <label for="loghours-starttime">Start time (Optional)</label>
-// <input type="text" name="nh-logged-hrs-start-time">
-// <label for="loghours-endtime">End time (Optional)</label>
-// <input type="text" name="nh-logged-hrs-end-time">
-// <input type=button id="countdown" data-text="" value="25:00">
-// <!-- Allow form submission with keyboard without duplicating the dialog button -->
-// <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-// </fieldset>
-// </form>
-// </div>
-// `).appendTo("body");
-
 // Plan Task modal form
 $(`<div
 class="modal fade"
@@ -736,7 +932,7 @@ data-backdrop="static"
       </button>
     </div>
     <div class="modal-body">
-      <form id="plan-form" title="Plan">
+      <form id="plan-form" title="Plan" class="needs-validation" novalidate>
         <div class="form-group">
           <label for="plan-form-taskid" class="col-form-label"
             >TaskIds</label
@@ -748,8 +944,12 @@ data-backdrop="static"
             name="plan-form-taskid"
             id="plan-form-taskid"
             value=""
-            class="form-control"
+            class="form-control" 
+            required
           />
+          <div class="invalid-tooltip">
+              There should be task ids to plan.
+            </div>
         </div>
 
         <div class="input-group" id="plan">
@@ -757,28 +957,35 @@ data-backdrop="static"
             type="text"
             class="form-control"
             name="plan-form-datepicker"
-            id="plan-form-datepicker"
+            id="plan-form-datepicker" 
+            required
           />
+          <div class="invalid-tooltip">
+              Need plan dates
+            </div>
 
-          <div class="input-group-append">
-            <select class="custom-select" name="plan" id="plan">
-              <option selected>Plan...</option>
-              <option value="1">Today</option>
-              <option value="2">Tomorow</option>
-              <option value="3">This week</option>
-              <option value="3">This month</option>
+          <div class="input-group-append has-validation">
+            <select class="custom-select" name="plan" id="plan" required>
+              <option value="" selected>Plan...</option>
+              <option value="This day">This day</option>
+              <option value="This week">This week</option>
+              <option value="This month">This month</option>
             </select>
-
+            
             <select
               class="custom-select"
               name="plan-priority"
               id="plan-priority"
+              required
             >
-              <option selected>Priority...</option>
-              <option value="1">P1</option>
-              <option value="2">P2</option>
-              <option value="3">P3</option>
+              <option value="" selected>Priority...</option>
+              <option value="P1 🔥">P1 🔥</option>
+              <option value="P2">P2</option>
+              <option value="P3">P3</option>
             </select>
+            <div class="invalid-tooltip">
+              Valid Plan/Priority required.
+            </div>
           </div>
         </div>
       </form>
@@ -792,7 +999,7 @@ data-backdrop="static"
       >
         Close
       </button>
-      <button type="button" class="btn btn-primary">Plan!</button>
+      <button type="submit" class="btn btn-primary">Plan!</button>
     </div>
   </div>
 </div>
@@ -821,7 +1028,7 @@ aria-hidden="true"
       </button>
     </div>
     <div class="modal-body">
-      <form id="nh-logged-hrs-form" title="Log Hours">
+      <form id="nh-logged-hrs-form" title="Log Hours" class="needs-validation" novalidate>
         <!-- Task Ids -->
         <div class="form-group">
           <label for="nh-logged-hrs-taskid" class="col-form-label"
@@ -833,7 +1040,11 @@ aria-hidden="true"
             id="nh-logged-hrs-taskid"
             value=""
             class="form-control"
+            required
           />
+          <div class="invalid-tooltip">
+              There should be task ids to log hours!
+            </div>
         </div>
 
         <!-- Title -->
@@ -850,7 +1061,11 @@ aria-hidden="true"
               id="nh-logged-hrs-title"
               value="Working on Tasks"
               class="form-control"
+              required
             />
+            <div class="invalid-tooltip">
+              Enter suitable title!
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -865,13 +1080,20 @@ aria-hidden="true"
               class="form-control"
               name="nh-logged-hrs-worked-on-days"
               id="nh-logged-hrs-worked-on-days"
+              placeholder="Select dates"
+              required
             />
             <input
               type="text"
               class="form-control"
               name="nh-logged-hrs-log-hrs"
               id="nh-logged-hrs-log-hrs"
+              placeholder="Enter hrs"
+              required
             />
+            <div class="invalid-tooltip">
+              Dates/hrs required.
+            </div>
           </div>
         </div>
         
@@ -914,7 +1136,7 @@ aria-hidden="true"
       </button>
     </div>
     <div class="modal-body">
-      <form id="nh-done-task-form" title="Completed Tasks">
+      <form id="nh-done-task-form" title="Completed Tasks" class="needs-validation" novalidate>
         <!-- Task Ids -->
         <div class="form-group">
           <label for="nh-done-task-taskid" class="col-form-label"
@@ -925,7 +1147,11 @@ aria-hidden="true"
             name="nh-done-task-taskid" id="nh-done-task-taskid"
             value=""
             class="form-control"
+            required
           />
+          <div class="invalid-tooltip">
+              There should be task/s to mark done!
+            </div>
         </div>
 
         <!-- Title -->
@@ -941,8 +1167,30 @@ aria-hidden="true"
               name="nh-done-task-title" id="nh-done-task-title"
               value="Working on Tasks"
               class="form-control"
+              required
             />
+            <div class="invalid-tooltip">
+              Describe your task!
+            </div>
+            <div class="input-group-append has-validation">
+            
+            
+              <select
+                class="custom-select"
+                name="nh-done-task-plan-priority"
+                id="nh-done-task-plan-priority"
+
+              >
+                <option value="" selected>Priority...</option>
+                <option value="P1 🔥">P1 🔥</option>
+                <option value="P2">P2</option>
+                <option value="P3">P3</option>
+              </select>
+             
+            </div>
           </div>
+
+          
         </div>
 
         <!-- Completed/Worked dates -->
@@ -957,8 +1205,12 @@ aria-hidden="true"
               type="text"
               class="form-control"
               name="nh-done-task-completed-date" id="nh-done-task-completed-date"
+              placeholder="Select dates"
+              required
             />
-           
+            <div class="invalid-tooltip">
+             Which day did you complete the task/s?
+            </div>
           </div>
         </div>
 
@@ -974,7 +1226,9 @@ aria-hidden="true"
               <input
                 type="text"
                 class="form-control"
-                name="nh-done-task-worked-on-days" id="nh-done-task-worked-on-days"
+                name="nh-done-task-worked-on-days" 
+                id="nh-done-task-worked-on-days"
+                placeholder="Select dates"
               />
             </div>
           </div>
@@ -991,7 +1245,7 @@ aria-hidden="true"
                 type="text"
                 name="nh-done-task-log-hrs"
                 value=""
-                class="form-control"
+                class="form-control"                
               />
             </div>
           </div>
@@ -1115,17 +1369,15 @@ $(document).on("keydown", "input", function (e) {
   // you can reference the event's current target
   console.log(e.currentTarget.value);
   if (
-    //(e.target.id == "plan-form-taskid" || e.target.id == "plan-form-datepicker") &&
-    e.keyCode == 37 ||
-    e.keyCode == 38 ||
-    e.keyCode == 39 ||
-    e.keyCode == 40 ||
-    e.keyCode == 8 ||
-    e.keyCode == 96
+    e.keyCode == 37 || //handle left arrow
+    e.keyCode == 38 || //handle up arrow
+    e.keyCode == 39 || //handle right arrow
+    e.keyCode == 40 || //handle down arrow
+    e.keyCode == 8 || //handle backspace
+    e.keyCode == 96 || //handle delete
+    (e.ctrlKey && e.key === "a") || //handle ctrl+a - Windows
+    (e.metaKey && e.key === "a") //handle cmd+a - Mac
   ) {
-    // $("#plan-form-datepicker").trigger( e );
-    console.log("fuck you!");
-
     e.stopPropagation();
     return true;
   }
@@ -1137,20 +1389,18 @@ $(document).ready(function () {
   //     return false;
   // }
 });
+
 function sortDates(dates) {
   return dates.split(",").sort();
 }
 
 $("#planTasks")
   .on("show.bs.modal", function (event) {
-    var button = $(event.relatedTarget); // Button that triggered the modal
-
-    var recipient = button.data("whatever"); // Extract info from data-* attributes
     // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
     // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
     var modal = $(this);
 
-    console.log("Registered click on Plan");
+    // console.log("Registered click on Plan");
     var taskids = ""; //recreate tasks
     $(".multi-ind-checkbox").each(function () {
       if ($(this).prop("checked") == true) {
@@ -1163,341 +1413,466 @@ $("#planTasks")
     //   modal.find('.btn-secondary').click();
     // modal.find('.modal-body input').val(recipient)
   })
+  .on("hidden.bs.modal", function (e) {
+    $("#plan-form").trigger("reset");
+    $("#plan-form-datepicker").datepicker("clearDates");
+    $("#plan-form").get(0).classList.remove("was-validated");
+  })
   .find(".btn-primary")
-  .on("click", function () {
+  .on("click", function (event) {
     var valid = true;
+    if (!$("#plan-form").get(0).checkValidity()) {
+      valid = false;
+    }
+    $("#plan-form").get(0).classList.add("was-validated");
+
     if (valid) {
       console.log("sorting dates before submitting");
       $("#plan-form-datepicker").val(
         sortDates($("#plan-form-datepicker").val())
       );
       var data = $("#plan-form").serialize();
-      alert(data);
-      // $.post(API_URL + "/notionhelper/api/v1/plantask", data)
-      //     .done(function (data) {
-      //         $('.multi-ind-checkbox').each(function () {
-      //             if ($(this).prop('checked') == true) {
-      //                 $(this).prop('checked', false);
-      //             }
-      //         });
-      //         alert("Successful confirmation PlanTask: " + data);
-      //     });
-      // plan_form.dialog("close");
-      $(this).modal("hide");
+      GrowlNotification.notify({
+        title: "Notion LM: Plan tasks",
+        description: "Posting PlanTask: " + data,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "info",
+        closeTimeout: 5000,
+      });
+
+      $.post(API_URL + "/notionhelper/api/v1/plantask", data).done(function (
+        result
+      ) {
+        const resultJson = JSON.parse(result);
+        if (resultJson.status == "Success") {
+          $(".multi-ind-checkbox").each(function () {
+            if ($(this).prop("checked") == true) {
+              $(this).prop("checked", false);
+            }
+          });
+          // alert("Successful confirmation PlanTask: " + data);
+
+          GrowlNotification.notify({
+            title: "Notion LM: Plan tasks",
+            description:
+              "Successful planned tasks: " + resultJson.statusMessage,
+            animation: {
+              open: "slide-in",
+              close: "slide-out",
+            },
+            type: "success",
+            closeTimeout: 5000,
+          });
+          console.log("Now hiding the form");
+          $("#planTasks").modal("hide");
+        } else {
+          GrowlNotification.notify({
+            title: "Notion LM: Plan tasks",
+            description: "Failed to plan tasks: " + resultJson.statusMessage,
+            animation: {
+              open: "slide-in",
+              close: "slide-out",
+            },
+            type: "error",
+            closeTimeout: 5000,
+          });
+        }
+      });
     }
-    return valid;
+    // return valid;
   });
-// $("#planTasks").find('.btn-secondary').on('click', function (e) {
-//     alert("clicked cancel");
-//     $(':input', '#plan-form')
-//     .not(':button, :submit, :reset, :hidden')
-//     .val('');
-//   });
 
-$("#planTasks").on("hidden.bs.modal", function (e) {
-  alert("clicked cancel");
-  // $(':input', '#plan-form')
-  // .not(':button, :submit, :reset, :hidden')
-  // .val('');
+$("#logHours")
+  .on("show.bs.modal", function (event) {
+    var modal = $(this);
 
-  $("#plan-form").trigger("reset");
-  $("#plan-form-datepicker").datepicker("clearDates");
-});
+    console.log("Registered click on LogHours");
+    var taskids = ""; //recreate tasks
+    $(".multi-ind-checkbox").each(function () {
+      if ($(this).prop("checked") == true) {
+        taskids = taskids + $(this).attr("data-text") + ",";
+      }
+    });
 
-var datepicker = $(function () {
-  $("#plan-form-datepicker").datepicker({
-    format: "yyyy-mm-dd",
-    multidate: true,
-    todayHighlight: true,
-    clearBtn: true,
-  }); //Listen for the change event on the input
+    $("#nh-logged-hrs-taskid").val(taskids);
+  })
+  .on("hidden.bs.modal", function (e) {
+    $("#nh-logged-hrs-form").trigger("reset");
+    $("#nh-logged-hrs-worked-on-days").datepicker("clearDates");
+    $("#nh-logged-hrs-form").get(0).classList.remove("was-validated");
+  })
+  .find(".btn-primary")
+  .on("click", function () {
+    var valid = true;
+    if (!$("#nh-logged-hrs-form").get(0).checkValidity()) {
+      valid = false;
+    }
+    $("#nh-logged-hrs-form").get(0).classList.add("was-validated");
+    if (valid) {
+      console.log("sorting dates before submitting");
+      $("#nh-logged-hrs-worked-on-days").val(
+        sortDates($("#nh-logged-hrs-worked-on-days").val())
+      );
+      var data = $("#nh-logged-hrs-form").serialize();
+      // alert(data);
+      GrowlNotification.notify({
+        title: "Notion LM: Log Hours to tasks",
+        description: "Posting LogHours: " + data,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "info",
+        closeTimeout: 5000,
+      });
+      $.post(API_URL + "/notionhelper/api/v1/loghours", data).done(function (
+        result
+      ) {
+        const resultJson = JSON.parse(result);
+        if (resultJson.status == "Success") {
+          $(".multi-ind-checkbox").each(function () {
+            if ($(this).prop("checked") == true) {
+              $(this).prop("checked", false);
+            }
+          });
+          // alert("Successful confirmation: " + data);
+          GrowlNotification.notify({
+            title: "Notion LM: Logged Hours to tasks",
+            description:
+              "Successfully logged hours to tasks: " + resultJson.statusMessage,
+            animation: {
+              open: "slide-in",
+              close: "slide-out",
+            },
+            type: "success",
+            closeTimeout: 5000,
+          });
 
-  function dateChanged(ev) {
-    var DateBox = document.getElementById("plan-form-datepicker").value;
-    var SelectedDates = [];
-    SelectedDates = DateBox.split(",");
-    DateBox = SelectedDates.sort();
-    $("#plan-form-datepicker").val(DateBox);
-    alert("Datebox:" + DateBox);
-  }
+          $("#logHours").modal("hide");
+        } else {
+          GrowlNotification.notify({
+            title: "Notion LM: Logged Hours to tasks",
+            description:
+              "Error logging hours to tasks: " + resultJson.statusMessage,
+            animation: {
+              open: "slide-in",
+              close: "slide-out",
+            },
+            type: "error",
+            closeTimeout: 5000,
+          });
+        }
+      });
+    }
+    // return valid;
+  });
 
-  // function planApiCallout() {
-  //     var valid = true;
-  //     if (valid) {
-  //         var data = $("#plan-form").serialize();
-  //         alert(data);
-  //         // $.post(API_URL + "/notionhelper/api/v1/plantask", data)
-  //         //     .done(function (data) {
-  //         //         $('.multi-ind-checkbox').each(function () {
-  //         //             if ($(this).prop('checked') == true) {
-  //         //                 $(this).prop('checked', false);
-  //         //             }
-  //         //         });
-  //         //         alert("Successful confirmation PlanTask: " + data);
-  //         //     });
-  //         // plan_form.dialog("close");
-  //         modal.modal('hide');
-  //     }
-  //     return valid;
-  // }
+$("#markDone")
+  .on("show.bs.modal", function (event) {
+    var modal = $(this);
 
-  var dialog_nh_done_task = $("#nh-done-task").dialog({
-    autoOpen: false,
-    height: 500,
-    width: 400,
-    modal: true,
-    buttons: {
-      Done: function done() {
-        event.preventDefault();
-        var valid = true;
-        if (valid) {
-          var data = $("#nh-done-task-form").serialize();
-          $.post(API_URL + "/notionhelper/api/v1/completetask", data).done(
-            function (result) {
-              //alert( "Data Loaded: " + data );
-              let text =
-                "Successful confirmation DoneTask: " +
-                result +
-                ". Press a button!\nEither OK or Cancel.";
-              if (confirm(text) == true) {
-                text = "You pressed OK!";
-                $.post(
-                  API_URL + "/notionhelper/api/v1/loghoursCompletedTask",
-                  data
-                ).done(function (data) {
+    console.log("Registered click on 'Mark Done'");
+    var taskids = ""; //recreate tasks
+    $(".multi-ind-checkbox").each(function () {
+      if ($(this).prop("checked") == true) {
+        taskids = taskids + $(this).attr("data-text") + ",";
+      }
+    });
+
+    $("#nh-done-task-taskid").val(taskids);
+  })
+  .on("hidden.bs.modal", function (e) {
+    $("#nh-done-task-form").trigger("reset");
+    $("#nh-done-task-completed-date").datepicker("clearDates");
+    $("#nh-done-task-worked-on-days").datepicker("clearDates");
+    $("#nh-done-task-repeat-task").datepicker("clearDates");
+    $("#nh-done-task-form").get(0).classList.remove("was-validated");
+  })
+  .find(".btn-primary")
+  .on("click", function () {
+    var valid = true;
+    if (!$("#nh-done-task-form").get(0).checkValidity()) {
+      valid = false;
+    }
+    $("#nh-done-task-form").get(0).classList.add("was-validated");
+    if (valid) {
+      console.log("sorting dates before submitting");
+      $("#nh-done-task-worked-on-days").val(
+        sortDates($("#nh-done-task-worked-on-days").val())
+      );
+      var data = $("#nh-done-task-form").serialize();
+      // alert(data);
+      GrowlNotification.notify({
+        title: "Notion LM: Complete tasks",
+        description: "Marking tasks to complete: " + data,
+        animation: {
+          open: "slide-in",
+          close: "slide-out",
+        },
+        type: "info",
+        closeTimeout: 5000,
+      });
+      $.post(API_URL + "/notionhelper/api/v1/completetask", data).done(
+        function (result) {
+          GrowlNotification.notify({
+            title: "Notion LM: Complete tasks",
+            description: "Marking tasks to complete: " + data,
+            animation: {
+              open: "slide-in",
+              close: "slide-out",
+            },
+            type: "info",
+            closeTimeout: 0,
+            showButtons: true,
+            buttons: {
+              action: {
+                text: "Ok",
+                callback: function () {
+                  text = "You pressed OK!";
+                  $.post(
+                    API_URL + "/notionhelper/api/v1/loghoursCompletedTask",
+                    data
+                  ).done(function (result) {
+                    //read the json data
+                    const resultJson = JSON.parse(result);
+                    if ((resultJson.status = "Success")) {
+                      $(".multi-ind-checkbox").each(function () {
+                        if ($(this).prop("checked") == true) {
+                          $(this).prop("checked", false);
+                        }
+                      });
+                      // alert("Successful confirmation LogHours: " + data);
+                      GrowlNotification.notify({
+                        title: "Notion LM: Complete tasks",
+                        description:
+                          "Successfully marked tasks completed: " +
+                          resultJson.statusMessage,
+                        animation: {
+                          open: "slide-in",
+                          close: "slide-out",
+                        },
+                        type: "success",
+                        closeTimeout: 5000,
+                      });
+                    } else {
+                      GrowlNotification.notify({
+                        title: "Notion LM: Complete tasks",
+                        description:
+                          "Error marking tasks completed: " +
+                          resultJson.statusMessage,
+                        animation: {
+                          open: "slide-in",
+                          close: "slide-out",
+                        },
+                        type: "error",
+                        closeTimeout: 5000,
+                      });
+                    }
+                  });
+                }, // callback
+              },
+              cancel: {
+                text: "Cancel",
+                callback: function () {
+                  text = "You canceled!";
                   $(".multi-ind-checkbox").each(function () {
                     if ($(this).prop("checked") == true) {
                       $(this).prop("checked", false);
                     }
                   });
-                  alert("Successful confirmation LogHours: " + data);
-                });
-              } else {
-                text = "You canceled!";
-                $(".multi-ind-checkbox").each(function () {
-                  if ($(this).prop("checked") == true) {
-                    $(this).prop("checked", false);
-                  }
-                });
-              }
-              //alert(text);
-            }
-          );
-          dialog_nh_done_task.dialog("close");
+                }, // callback
+              },
+            },
+          });
+
+          // //alert( "Data Loaded: " + data );
+          // let text =
+          //   "Successful confirmation DoneTask: " +
+          //   result +
+          //   ". Press a button!\nEither OK or Cancel.";
+          // if (confirm(text) == true) {
+          //   text = "You pressed OK!";
+          //   $.post(
+          //     API_URL + "/notionhelper/api/v1/loghoursCompletedTask",
+          //     data
+          //   ).done(function (data) {
+          //     $(".multi-ind-checkbox").each(function () {
+          //       if ($(this).prop("checked") == true) {
+          //         $(this).prop("checked", false);
+          //       }
+          //     });
+          //     // alert("Successful confirmation LogHours: " + data);
+          //     GrowlNotification.notify({
+          //       title: "Notion LM: Complete tasks",
+          //       description: "Successfully marked tasks completed: " + data,
+          //       type: "success",
+          //       closeTimeout: 5000,
+          //     });
+          //   });
+          // } else {
+          //   text = "You canceled!";
+          //   $(".multi-ind-checkbox").each(function () {
+          //     if ($(this).prop("checked") == true) {
+          //       $(this).prop("checked", false);
+          //     }
+          //   });
+          // }
+          //alert(text);
+          $("#markDone").modal("hide");
         }
-        return valid;
-      },
-      Cancel: function () {
-        $(":input", "#nh-done-task")
-          .not(":button, :submit, :reset, :hidden")
-          .val("");
-        dialog_nh_done_task.dialog("close");
-      },
-    },
-
-    close: function () {
-      $(":input", "#nh-done-task")
-        .not(":button, :submit, :reset, :hidden")
-        .val("");
-    },
-  });
-
-  var logged_hrs_form = $("#nh-logged-hrs").dialog({
-    autoOpen: false,
-    height: 400,
-    width: 350,
-    modal: true,
-    buttons: {
-      Log: function log() {
-        event.preventDefault();
-        var valid = true;
-        if (valid) {
-          var data = $("#nh-logged-hrs-form").serialize();
-          $.post(API_URL + "/notionhelper/api/v1/loghours", data).done(
-            function (data) {
-              $(".multi-ind-checkbox").each(function () {
-                if ($(this).prop("checked") == true) {
-                  $(this).prop("checked", false);
-                }
-              });
-              alert("Successful confirmation: " + data);
-            }
-          );
-          logged_hrs_form.dialog("close");
-        }
-        return valid;
-      },
-      Cancel: function () {
-        $(":input", "#nh-logged-hrs")
-          .not(":button, :submit, :reset, :hidden")
-          .val("");
-        logged_hrs_form.dialog("close");
-        $("#nh-logged-hrs-worked-on-days").multiDatesPicker(
-          "resetDates",
-          "picked"
-        );
-      },
-    },
-
-    close: function () {
-      $(":input", "#nh-logged-hrs")
-        .not(":button, :submit, :reset, :hidden")
-        .val("");
-      $("#nh-logged-hrs-worked-on-days").multiDatesPicker(
-        "resetDates",
-        "picked"
       );
-    },
+    }
+    // return valid;
   });
 
-  //   .on('show', function (e) {
-  //     $("#plan-form-datepicker").blur();
-  //     setTimeout(function () {
-  //       $("#plan-form-datepicker").focus();
-  //     }, 300); // 1 millisecond delay seems to be enought!!!
-  //   });
+// var datepickers = $(function () {
+//   $("#plan-form-datepicker").datepicker({
+//     format: "yyyy-mm-dd",
+//     multidate: true,
+//     todayHighlight: true,
+//     clearBtn: true,
+//   }); //Listen for the change event on the input
 
-  //   $("#plan-form-datepicker").keyup(function (e) {
-  //     console.log(e.keyCode);
-  //     if (
-  //       e.keyCode == 37 ||
-  //       e.keyCode == 38 ||
-  //       e.keyCode == 39 ||
-  //       e.keyCode == 40
-  //     ) {
-  //     //   e.preventDefault();
-  //     //   e.stopPropagation();
-  //       console.log("Trapped event:" + e.keyCode);
-  //     }
-  //     if (e.keyCode == 8) {
-  //       e.preventDefault();
-  //       e.stopPropagation();
-  //       var box = document.getElementById("plan-form-datepicker");
-  //       backspace(box);
+//   $("#nh-logged-hrs-worked-on-days").datepicker({
+//     format: "yyyy-mm-dd",
+//     multidate: true,
+//     todayHighlight: true,
+//     clearBtn: true,
+//   });
 
-  //       //   alert("backspace pressed");
-  //     }
-  //   });
+//   $("#nh-done-task-completed-date").datepicker({
+//     format: "yyyy-mm-dd",
+//     multidate: false,
+//     todayHighlight: true,
+//     clearBtn: true,
+//   });
 
-  //   $(".nh-select-menu").selectmenu();
+//   $("#nh-done-task-worked-on-days").datepicker({
+//     format: "yyyy-mm-dd",
+//     multidate: true,
+//     todayHighlight: true,
+//     clearBtn: true,
+//   });
 
-  //   $("#plan-form-datepicker").datepicker({
-  //     showOtherMonths: true,
-  //     selectOtherMonths: true,
-  //     dateFormat: "yy-mm-dd",
-  //   });
+//   $("#nh-done-task-repeat-task").datepicker({
+//     format: "yyyy-mm-dd",
+//     multidate: false,
+//     todayHighlight: true,
+//     clearBtn: true,
+//   });
 
-  //   $("#nh-done-task-repeat-task").multiDatesPicker({
-  //     showOtherMonths: true,
-  //     selectOtherMonths: true,
-  //     dateFormat: "yy-mm-dd",
-  //     onSelect: function () {
-  //       // Get the "datepicker" object.
-  //       var datepickerObj = $(this).data("datepicker");
+//   // var dialog_nh_done_task = $("#nh-done-task").dialog({
+//   //   autoOpen: false,
+//   //   height: 500,
+//   //   width: 400,
+//   //   modal: true,
+//   //   buttons: {
+//   //     Done: function done() {
+//   //       event.preventDefault();
+//   //       var valid = true;
+//   //       if (valid) {
+//   //         var data = $("#nh-done-task-form").serialize();
+//   //         $.post(API_URL + "/notionhelper/api/v1/completetask", data).done(
+//   //           function (result) {
+//   //             //alert( "Data Loaded: " + data );
+//   //             let text =
+//   //               "Successful confirmation DoneTask: " +
+//   //               result +
+//   //               ". Press a button!\nEither OK or Cancel.";
+//   //             if (confirm(text) == true) {
+//   //               text = "You pressed OK!";
+//   //               $.post(
+//   //                 API_URL + "/notionhelper/api/v1/loghoursCompletedTask",
+//   //                 data
+//   //               ).done(function (data) {
+//   //                 $(".multi-ind-checkbox").each(function () {
+//   //                   if ($(this).prop("checked") == true) {
+//   //                     $(this).prop("checked", false);
+//   //                   }
+//   //                 });
+//   //                 alert("Successful confirmation LogHours: " + data);
+//   //               });
+//   //             } else {
+//   //               text = "You canceled!";
+//   //               $(".multi-ind-checkbox").each(function () {
+//   //                 if ($(this).prop("checked") == true) {
+//   //                   $(this).prop("checked", false);
+//   //                 }
+//   //               });
+//   //             }
+//   //             //alert(text);
+//   //           }
+//   //         );
+//   //         dialog_nh_done_task.dialog("close");
+//   //       }
+//   //       return valid;
+//   //     },
+//   //     Cancel: function () {
+//   //       $(":input", "#nh-done-task")
+//   //         .not(":button, :submit, :reset, :hidden")
+//   //         .val("");
+//   //       dialog_nh_done_task.dialog("close");
+//   //     },
+//   //   },
 
-  //       // Get the "settings" object within "datepicker".
-  //       var datepickerSettings = datepickerObj.settings;
+//   //   close: function () {
+//   //     $(":input", "#nh-done-task")
+//   //       .not(":button, :submit, :reset, :hidden")
+//   //       .val("");
+//   //   },
+//   // });
 
-  //       // Get the last date picked.
-  //       var d = new Date();
-  //       var dayDiff = datepickerObj.selectedDay - d.getDate();
-  //       var monthDiff = datepickerObj.selectedMonth - d.getMonth();
-  //       var yearDiff = datepickerObj.selectedYear - d.getFullYear();
-  //       var pickedDate =
-  //         "+" + dayDiff + "d +" + monthDiff + "m +" + yearDiff + "y";
+//   // var logged_hrs_form = $("#nh-logged-hrs").dialog({
+//   //   autoOpen: false,
+//   //   height: 400,
+//   //   width: 350,
+//   //   modal: true,
+//   //   buttons: {
+//   //     Log: function log() {
+//   //       event.preventDefault();
+//   //       var valid = true;
+//   //       if (valid) {
+//   //         var data = $("#nh-logged-hrs-form").serialize();
+//   //         $.post(API_URL + "/notionhelper/api/v1/loghours", data).done(
+//   //           function (data) {
+//   //             $(".multi-ind-checkbox").each(function () {
+//   //               if ($(this).prop("checked") == true) {
+//   //                 $(this).prop("checked", false);
+//   //               }
+//   //             });
+//   //             alert("Successful confirmation: " + data);
+//   //           }
+//   //         );
+//   //         logged_hrs_form.dialog("close");
+//   //       }
+//   //       return valid;
+//   //     },
+//   //     Cancel: function () {
+//   //       $(":input", "#nh-logged-hrs")
+//   //         .not(":button, :submit, :reset, :hidden")
+//   //         .val("");
+//   //       logged_hrs_form.dialog("close");
+//   //       $("#nh-logged-hrs-worked-on-days").multiDatesPicker(
+//   //         "resetDates",
+//   //         "picked"
+//   //       );
+//   //     },
+//   //   },
 
-  //       // Remove previous "defaultDate" property.
-  //       delete datepickerSettings["defaultDate"];
-
-  //       // Add a new defaultDate property : value.
-  //       datepickerSettings.defaultDate = pickedDate;
-
-  //       // Avoid having to click twice on prev/next month.
-  //       $("#nh-done-task-repeat-task").blur();
-  //       setTimeout(function () {
-  //         $("#nh-done-task-repeat-task").focus();
-  //       }, 300); // 1 millisecond delay seems to be enought!!!
-  //     },
-  //   });
-
-  //   $("#nh-logged-hrs-title").click(function (event) {
-  //     event.preventDefault();
-  //     event.stopPropagation();
-  //     //alert("The span element was clicked.");
-  //   });
-
-  //   $("#nh-done-task-completed-date").datepicker({
-  //     showOtherMonths: true,
-  //     selectOtherMonths: true,
-  //     dateFormat: "yy-mm-dd",
-  //   });
-
-  //   $("#nh-done-task-worked-on-days").multiDatesPicker({
-  //     showOtherMonths: true,
-  //     selectOtherMonths: true,
-  //     dateFormat: "yy-mm-dd",
-  //     onSelect: function () {
-  //       // Get the "datepicker" object.
-  //       var datepickerObj = $(this).data("datepicker");
-
-  //       // Get the "settings" object within "datepicker".
-  //       var datepickerSettings = datepickerObj.settings;
-
-  //       // Get the last date picked.
-  //       var d = new Date();
-  //       var dayDiff = datepickerObj.selectedDay - d.getDate();
-  //       var monthDiff = datepickerObj.selectedMonth - d.getMonth();
-  //       var yearDiff = datepickerObj.selectedYear - d.getFullYear();
-  //       var pickedDate =
-  //         "+" + dayDiff + "d +" + monthDiff + "m +" + yearDiff + "y";
-
-  //       // Remove previous "defaultDate" property.
-  //       delete datepickerSettings["defaultDate"];
-
-  //       // Add a new defaultDate property : value.
-  //       datepickerSettings.defaultDate = pickedDate;
-
-  //       // Avoid having to click twice on prev/next month.
-  //       $("#nh-done-task-worked-on-days").blur();
-  //       setTimeout(function () {
-  //         $("#nh-done-task-worked-on-days").focus();
-  //       }, 300); // 1 millisecond delay seems to be enought!!!
-  //     },
-  //   });
-
-  //   $("#nh-logged-hrs-worked-on-days").multiDatesPicker({
-  //     showOtherMonths: true,
-  //     selectOtherMonths: true,
-  //     dateFormat: "yy-mm-dd",
-  //     onSelect: function () {
-  //       // Get the "datepicker" object.
-  //       var datepickerObj = $(this).data("datepicker");
-
-  //       // Get the "settings" object within "datepicker".
-  //       var datepickerSettings = datepickerObj.settings;
-
-  //       // Get the last date picked.
-  //       var d = new Date();
-  //       var dayDiff = datepickerObj.selectedDay - d.getDate();
-  //       var monthDiff = datepickerObj.selectedMonth - d.getMonth();
-  //       var yearDiff = datepickerObj.selectedYear - d.getFullYear();
-  //       var pickedDate =
-  //         "+" + dayDiff + "d +" + monthDiff + "m +" + yearDiff + "y";
-
-  //       // Remove previous "defaultDate" property.
-  //       delete datepickerSettings["defaultDate"];
-
-  //       // Add a new defaultDate property : value.
-  //       datepickerSettings.defaultDate = pickedDate;
-
-  //       // Avoid having to click twice on prev/next month.
-  //       $("#nh-logged-hrs-worked-on-days").blur();
-  //       setTimeout(function () {
-  //         $("#nh-logged-hrs-worked-on-days").focus();
-  //       }, 300); // 1 millisecond delay seems to be enought!!!
-  //     },
-  //   });
-});
+//   //   close: function () {
+//   //     $(":input", "#nh-logged-hrs")
+//   //       .not(":button, :submit, :reset, :hidden")
+//   //       .val("");
+//   //     $("#nh-logged-hrs-worked-on-days").multiDatesPicker(
+//   //       "resetDates",
+//   //       "picked"
+//   //     );
+//   //   },
+//   // });
+// });
 
 var interval;
 var minutes;
