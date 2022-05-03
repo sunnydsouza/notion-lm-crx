@@ -72,7 +72,7 @@ You should check the required tasks before using the `Notion LM` dropdown option
 
 ![Plan form growl notification](docs/images/v2.0.0/screenshot10.png)
 
-## LogHours
+## Log Hours
 Ability to log hours against single or multiple tasks at once. 
 
 If multiple tasks are selected and multiple dates are selected in “Worked on dates”, then in that case, the hours are **equally** distributed across multiple tasks and dates
@@ -83,7 +83,7 @@ eg: if 2 tasks are selected and you have worked on both for 2 days, and the hour
 
 ![Log hours](docs/images/v2.0.0/screenshot8.png)
 
-## MarkDone
+## Mark done
 You can *ONLY* put in one “Completed Date” (obvious) but can select multiple “Worked on dates”, as you could have worked on the tasks for say, a week or so.
 
 The principle of logged hours remains same here - if 2 tasks are selected and you have worked on both for 2 days, and the hours logged in “Log Hours” field is 10, then hours logged across each task would be 10/2*2=2.5/each day
@@ -97,7 +97,7 @@ Logging hours could be optional as you might just want to mark the task complete
 
 ![Mark done success notification](docs/images/v2.0.0/screenshot4.png)
 
-## ClearAll
+## Clear all
 This simply unchecks all checkboxes in `SNH` column/property
 
 
