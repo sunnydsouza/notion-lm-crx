@@ -2,6 +2,9 @@
 A chrome extension which works with notion-lm-api to achieve automation in Notion workspace.
 
 
+**PLEASE NOTE** - this doesnt work standalone and **WILL NEED** the [notion-lm-api](https://github.com/sunnydsouza/notion-lm-api) to be deployed on a suitable environment. 
+Also, the automations with this extension, **ONLY** works on **Sunny's Notion LifeManagement(LM) templates.**
+
 This is a chrome extension which works alongside the Notion LM Api (designed in Python Flask). There is also a version of this which works as a tampermonkey script. 
 
 This is basically the improvized version over version 1. Please view the screenshots and documention below
@@ -20,7 +23,15 @@ Else, simply clone the project in a local directory
 git clone https://github.com/sunnydsouza/notion-lm-crx.git
 ```
 
-Once downloaded to.a local directory, open the chrom extensions menu and enable **developer mode**
+**IMPORTANT NOTE**
+In case you are using V1.0.0 or V2.0.0, then you need to manually specify the endpoint where [notion-lm-api](https://github.com/sunnydsouza/notion-lm-api) is deployed in the `content.bundle.js` file
+
+```java
+// Change the below url based on where you deploy notion-lm-api
+let API_URL="https://192.168.0.128:8200"; 
+```
+
+Once downloaded to a local directory, open the chrome extensions menu and enable **developer mode**
 
 Select the `Load unpacked` options and then select the directory where you cloned the project.
 
