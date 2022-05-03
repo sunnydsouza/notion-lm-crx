@@ -1,7 +1,7 @@
-var startTimer = false;
+
 let gIndex = 1;
 let addedPlanToIndividualTaskPage = false;
-const pollIntervalNotionLMHelperButtons = 10000;
+const pollIntervalNotionLMHelperButtons = 5000;
 let ON_FEATURE_PAGE = false;
 let ON_RELEASE_PAGE = false;
 //let API_URL="https://192.168.0.128:8100";  //local machine macos
@@ -13,12 +13,20 @@ let NHA_TRIGGER_WORDS = [
   "Sub tasks",
   "Project distribution view",
 ];
-let BTN_GEN_MAP = {
-  "This idea task list": "Plan,Log,Done,Clear",
-  "This feature tasks list": "Plan,Log,Done,Clear",
-  "Todays Task": "Log,Done,Clear",
-  "Sub tasks": "Plan,Log,Done,Clear",
-};
+// let BTN_GEN_MAP = {
+//   "This idea task list": "Plan,Log,Done,Clear",
+//   "This feature tasks list": "Plan,Log,Done,Clear",
+//   "Todays Task": "Log,Done,Clear",
+//   "Sub tasks": "Plan,Log,Done,Clear",
+// };
+
+$.ajaxSetup({
+  type: "POST",
+  timeout: 30000,
+  error: function (xhr) {
+    showGrowlNotification(title="Notion LM", description="API timeout error. Not reachable?", type="error",closeTimeout=0);
+  },
+});
 
 waitForKeyElements(
   "div[class*=notion-focusable][style*='color: rgb(55, 53, 47);']:contains('Log hours spent on this task')",
@@ -69,11 +77,21 @@ function addNotesHere(jNode) {
   );
 }
 
-function showGrowlNotification(title, description, type, closeTimeout) {
+function showGrowlNotification(
+  title = "Notion LM",
+  description,
+  type,
+  closeTimeout = 45000
+) {
   GrowlNotification.notify({
     title: title,
     description: description,
     type: type,
+    animation: {
+      open: "slide-in",
+      close: "slide-out",
+    },
+    maxNotifications: 1,
     closeTimeout: closeTimeout,
   });
 }
@@ -306,11 +324,7 @@ function autoApplyFilterToGtdTasksView(databaseView) {
     // showProgress: true,
   });
 
-  var dateYYYYMMDD = new Date(
-    new Date().getTime() - new Date().getTimezoneOffset() * 60000
-  )
-    .toISOString()
-    .split("T")[0];
+  var dateYYYYMMDD = getTodayInYYYYMMDD();
   console.log("dateYYYYMMDD:" + dateYYYYMMDD);
   $.post(API_URL + "/notionhelper/api/v1/applycollectionviewfilter", {
     collection_view: $(databaseView)
@@ -347,6 +361,24 @@ function autoApplyFilterToGtdTasksView(databaseView) {
       });
     }
   });
+}
+
+function getDateInYYYYMMDD(date) {
+  var dateYYYYMMDD = new Date(
+    new Date(date).getTime() - new Date(date).getTimezoneOffset() * 60000
+  )
+    .toISOString()
+    .split("T")[0];
+  return dateYYYYMMDD;
+}
+
+function getTodayInYYYYMMDD() {
+  var dateYYYYMMDD = new Date(
+    new Date().getTime() - new Date().getTimezoneOffset() * 60000
+  )
+    .toISOString()
+    .split("T")[0];
+  return dateYYYYMMDD;
 }
 
 function autoApplyFilterToGtdSessionsView(jNode) {
@@ -465,9 +497,9 @@ $(document).ready(function () {
 
   $("form :input").attr("autocomplete", "off");
 });
-// showDoneTaskModalForm(this,id);
 
-let actualStartTime;
+
+
 
 function addNotionLogHours(jNode) {
   console.log("addNotionLogHours active: Adding Notion Log Hours button");
@@ -479,7 +511,7 @@ function addNotionLogHours(jNode) {
   //   '<div><input type=button id="loghours-btn" data-text="you clicked loghours btn!" class="loghours-btn" value="Log Hours"/><audio id="pomo-done-alert" src="https://pomofocus.io/audios/alarms/alarm-kitchen.mp3" preload="auto"></audio></div>';
 
   tempDiv.innerHTML =
-    '<button type="button" class="btn btn-primary" id="logHoursBtn" data-toggle="modal" data-target="#logHours" data-whatever="@mdo" href="#"Log Hours</button>';
+    '<button type="button" class="btn btn-primary" id="logHoursBtn" data-toggle="modal" data-target="#logHours" data-whatever="@mdo" href="#">Log Hours</button>';
   bottomoffset = bottomoffset - 60;
   jNode[0].parentNode.parentNode.append(tempDiv);
 
