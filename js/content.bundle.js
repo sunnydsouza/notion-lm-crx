@@ -3,8 +3,8 @@ let gIndex = 1;
 let addedPlanToIndividualTaskPage = false;
 let ON_FEATURE_PAGE = false;
 let ON_RELEASE_PAGE = false;
-//let API_URL="https://192.168.0.128:8100";  //local machine macos
-let API_URL = "https://192.168.0.109:8100";  //server
+let API_URL="https://192.168.0.128:8200";  //local machine macos
+// let API_URL = "https://192.168.0.109:8100";  //server
 let NHA_TRIGGER_WORDS = ['This idea task list', 'This feature tasks list', 'Todays Task', 'Sub tasks'];
 let BTN_GEN_MAP = {
     "This idea task list": "Plan,Log,Done,Clear",
@@ -434,15 +434,14 @@ $(`                                                         \
 <br/>
 <label for="plan">Plan</label>
 <select class="nh-select-menu" name="plan" id="plan">
-<option selected="selected">Today</option>
-<option>Tomorow</option>
+<option selected="selected">This day</option>
 <option>This week</option>
 <option>This month</option>
 </select>
 <br/>
 <label for="plan-priority">Priority</label>
 <select class="nh-select-menu" name="plan-priority" id="plan-priority">
-<option selected="selected">--None--</option>
+<option selected="selected" value="">--None--</option>
 <option>P1 🔥</option>
 <option>P2</option>
 <option>P3</option>
@@ -473,7 +472,7 @@ $(`
 <br/>
 <label for="plan-priority">Priority</label>
 <select class="nh-select-menu" name="nh-done-task-plan-priority" id="nh-done-task-plan-priority">
-<option selected="selected">--None--</option>
+<option selected="selected" value="">--None--</option>
 <option>P1 🔥</option>
 <option>P2</option>
 <option>P3</option>
