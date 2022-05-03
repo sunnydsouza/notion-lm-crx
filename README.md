@@ -1,5 +1,7 @@
 # notion-lm-crx
-A chrome extension which works with notion-lm-api to achieve automation in Notion workspace.
+A chrome extension which works with [notion-lm-api](https://github.com/sunnydsouza/notion-lm-api) to achieve automation in Notion workspace.
+**PLEASE NOTE** - this doesnt work standalone and **WILL NEED** the [notion-lm-api](https://github.com/sunnydsouza/notion-lm-api) to be deployed on a suitable environment. 
+Also, the automations with this extension, **ONLY** works on **Sunny's Notion LifeManagement(LM) templates.**
 
 ### Tools used ###
 * HTML, CSS and JavaScript
@@ -19,6 +21,15 @@ Else, simply clone the project in a local directory
 ```java
 git clone https://github.com/sunnydsouza/notion-lm-crx.git
 ```
+
+**IMPORTANT NOTE FOR V1**
+In case you are using V1, then you need to manually specify the endpoint where [notion-lm-api](https://github.com/sunnydsouza/notion-lm-api) is deployed in the `content.bundle.js` file
+
+```java
+// Change the below url based on where you deploy notion-lm-api
+let API_URL="https://192.168.0.128:8200"; 
+```
+
 
 Once downloaded to.a local directory, open the chrom extensions menu and enable **developer mode**
 
