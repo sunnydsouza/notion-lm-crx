@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    <!-- <link rel="stylesheet" href="css/jquery-ui.css"> -->
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+
+    <!-- <link rel="stylesheet" href="bootstrap-datetimepicker.min.css"> -->
+    <link rel="stylesheet" href="css/bootstrap-datepicker3.min.css" />
+
+    <title>Hello, world!</title>
+  </head>
+
+  <body>
+    <h1>Hello, world!</h1>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script> -->
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <!-- <script src="moment-with-locales.min.js"></script> -->
+    <!-- <script src="bootstrap-datetimepicker.min.js"></script> -->
+    <script src="js/bootstrap-datepicker.min.js"></script>
+    <!-- <script src="bootstrap-datepicker.en-GB.min.js"></script> -->
+    <div
+      class="btn-group"
+      role="group"
+      aria-label="Button group with nested dropdown"
+    >
+      <div class="btn-group" role="group">
+        <button
+          id="btnGroupDrop1"
+          type="button"
+          class="btn btn-secondary dropdown-toggle"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          NotionLM
+        </button>
+        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+          <a
+            class="dropdown-item"
+            id="planTasksBtn"
+            data-toggle="modal"
+            data-target="#planTasks"
+            data-whatever="@mdo"
+            href="#"
+            >Plan</a
+          >
+          <a
+            class="dropdown-item"
+            id="logHoursBtn"
+            data-toggle="modal"
+            data-target="#logHours"
+            data-whatever="@mdo"
+            href="#"
+            >Log hours</a
+          >
+          <a
+            class="dropdown-item"
+            id="markDoneBtn"
+            data-toggle="modal"
+            data-target="#markDone"
+            data-whatever="@mdo"
+            href="#"
+            >Mark Done</a
+          >
+          <a
+            class="dropdown-item"
+            id="clearAllBtn"
+            data-toggle="modal"
+            data-target="#clearAll"
+            data-whatever="@mdo"
+            href="#"
+            >Clear All</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal"
+        data-whatever="@mdo">Plan</button> -->
+    <div
+      class="btn-group"
+      role="group"
+      aria-label="Button group with nested dropdown"
+    >
+      <div class="btn-group" role="group">
+        <button
+          id="btnGroupDrop1"
+          type="button"
+          class="btn btn-secondary dropdown-toggle"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          NotionLM
+        </button>
+        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+          <a
+            class="dropdown-item"
+            id="planTasksBtn"
+            data-toggle="modal"
+            data-target="#planTasks"
+            data-whatever="@mdo"
+            href="#"
+            >Plan</a
+          >
+          <a
+            class="dropdown-item"
+            id="logHoursBtn"
+            data-toggle="modal"
+            data-target="#logHours"
+            data-whatever="@mdo"
+            href="#"
+            >Log hours</a
+          >
+          <a
+            class="dropdown-item"
+            id="markDoneBtn"
+            data-toggle="modal"
+            data-target="#markDone"
+            data-whatever="@mdo"
+            href="#"
+            >Mark Done</a
+          >
+          <a
+            class="dropdown-item"
+            id="clearAllBtn"
+            data-toggle="modal"
+            data-target="#clearAll"
+            data-whatever="@mdo"
+            href="#"
+            >Clear All</a
+          >
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="planTasks"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="planTasksLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="planTasksLabel">Plan Tasks!</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="plan-dialog" title="Plan">
+              <div class="form-group">
+                <label for="plan-form-taskid" class="col-form-label"
+                  >TaskIds</label
+                >
+                <input
+                  type="text"
+                  name="plan-form-taskid"
+                  id="plan-form-taskid"
+                  value=""
+                  class="form-control"
+                />
+              </div>
+
+              <div class="input-group" id="plan">
+                <input
+                  type="text"
+                  class="form-control"
+                  name="plan-form-datepicker"
+                  id="plan-form-datepicker"
+                />
+
+                <div class="input-group-append">
+                  <select class="custom-select" name="plan" id="plan">
+                    <option selected>Plan...</option>
+                    <option value="1">Today</option>
+                    <option value="2">Tomorow</option>
+                    <option value="3">This week</option>
+                    <option value="3">This month</option>
+                  </select>
+
+                  <select
+                    class="custom-select"
+                    name="plan-priority"
+                    id="plan-priority"
+                  >
+                    <option selected>Priority...</option>
+                    <option value="1">P1</option>
+                    <option value="2">P2</option>
+                    <option value="3">P3</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary">Plan!</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="logHours"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="logHoursLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="logHoursLabel">Log Hours!</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="nh-logged-hrs-form" title="Log Hours">
+              <!-- Task Ids -->
+              <div class="form-group">
+                <label for="nh-logged-hrs-taskid" class="col-form-label"
+                  >TaskIds</label
+                >
+                <input
+                  type="text"
+                  name="nh-logged-hrs-taskid"
+                  id="nh-logged-hrs-taskid"
+                  value=""
+                  class="form-control"
+                />
+              </div>
+
+              <!-- Title -->
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id=""
+                      >Title</span
+                    >
+                  </div>
+                  <input
+                    type="text"
+                    name="nh-logged-hrs-title"
+                    id="nh-logged-hrs-title"
+                    value="Working on Tasks"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id=""
+                      >Worked days/hrs</span
+                    >
+                  </div>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="nh-logged-hrs-worked-on-days"
+                    id="nh-logged-hrs-worked-on-days"
+                  />
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="nh-logged-hrs-log-hrs"
+                    id="nh-logged-hrs-log-hrs"
+                  />
+                </div>
+              </div>
+              
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary">Log Hours!</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+    class="modal fade"
+    id="markDone"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="markDoneLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="markDoneLabel">Done!</h5>
+          <button
+            type="button"
+            class="close"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="nh-done-task-form" title="Completed Tasks">
+            <!-- Task Ids -->
+            <div class="form-group">
+              <label for="nh-done-task-taskid" class="col-form-label"
+                >TaskIds</label
+              >
+              <input
+                type="text"
+                name="nh-done-task-taskid" id="nh-done-task-taskid"
+                value=""
+                class="form-control"
+              />
+            </div>
+
+            <!-- Title -->
+            <div class="form-group">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id=""
+                    >Title</span
+                  >
+                </div>
+                <input
+                  type="text"
+                  name="nh-done-task-title" id="nh-done-task-title"
+                  value="Working on Tasks"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <!-- Completed/Worked dates -->
+            <div class="form-group">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id=""
+                    >Completed On</span
+                  >
+                </div>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="nh-done-task-completed-date" id="nh-done-task-completed-date"
+                />
+               
+              </div>
+            </div>
+
+            <!-- Worked dates -->
+            <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id=""
+                      >Worked On</span
+                    >
+                  </div>
+                  
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="nh-done-task-worked-on-days" id="nh-done-task-worked-on-days"
+                  />
+                </div>
+              </div>
+
+            <!-- Hours -->
+            <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id=""
+                      >Hours spent</span
+                    >
+                  </div>
+                  <input
+                    type="text"
+                    name="nh-done-task-log-hrs"
+                    value=""
+                    class="form-control"
+                  />
+                </div>
+              </div>
+
+              <!-- Repeat task -->
+            <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id=""
+                      >Repeat</span
+                    >
+                  </div>
+                  <input
+                    type="text"
+                    name="nh-done-task-repeat-task" id="nh-done-task-repeat-task"
+                    value=""
+                    class="form-control"
+                  />
+                </div>
+              </div>
+            
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-dismiss="modal"
+          >
+            Close
+          </button>
+          <button type="button" class="btn btn-primary">Mark done!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+    <script type="text/JavaScript">
+      $('#planTasks').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+
+          var recipient = button.data('whatever') // Extract info from data-* attributes
+          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+          var modal = $(this)
+          // modal.find('.modal-title').text('New message to ' + recipient)
+          // modal.find('.modal-body input').val(recipient)
+          $('#plan-form-datepicker').datepicker({
+              format: "yyyy-mm-dd",
+              multidate: true,
+              todayHighlight: true
+           });
+          })
+
+      $('#markDone').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+
+          var recipient = button.data('whatever') // Extract info from data-* attributes
+          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+          var modal = $(this)
+          // modal.find('.modal-title').text('New message to ' + recipient)
+          // modal.find('.modal-body input').val(recipient)
+          $('#plan-form-datepicker').datepicker({
+              format: "yyyy-mm-dd",
+              multidate: true,
+              todayHighlight: true
+           });
+          })
+
+      $('#logHours').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+
+          var recipient = button.data('whatever') // Extract info from data-* attributes
+          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+          var modal = $(this)
+          // modal.find('.modal-title').text('New message to ' + recipient)
+          // modal.find('.modal-body input').val(recipient)
+          $('#plan-form-datepicker').datepicker({
+              format: "yyyy-mm-dd",
+              multidate: true,
+              todayHighlight: true
+           });
+          })
+
+      $('#clearAll').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+
+          var recipient = button.data('whatever') // Extract info from data-* attributes
+          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+          var modal = $(this)
+          // modal.find('.modal-title').text('New message to ' + recipient)
+          // modal.find('.modal-body input').val(recipient)
+          $('#plan-form-datepicker').datepicker({
+              format: "yyyy-mm-dd",
+              multidate: true,
+              todayHighlight: true
+           });
+          })
+    </script>
+  </body>
+</html>

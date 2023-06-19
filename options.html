@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>OTT Tracker settings</title>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+    <div class="container" style="min-height:270px;min-width:700px;padding-top:9px;">
+        <form>
+            <div style="width: 100%; height: 15px; border-bottom: 1px solid grey; text-align: center; clear:both;margin-bottom:18px;margin-top:-15px;">
+                <span style="font-size: 18px; background-color: #FFF; padding: 0 10px;">
+                    <img src="images/settings.png" style="height: 21px;" /> Basic settings
+                </span>
+            </div>
+            
+
+            <div class="form-group row">
+                <label for="api_endpoint" class="col-sm-4 text-right">Notion LM API endpoint:</label>
+                <div class="col-sm-6">
+                    <input placeholder="https://192.168.0.10/myapi/..." id="api_endpoint" type="text" class="form-control form-control-sm">
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-4"></div>
+                <div class="col-sm-8">
+                    For more info, refer <a href="#">README</a> of extension
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-sm-4"></div>
+                <div class="col-sm-8">
+                    <button type="button" class="btn btn-success" id="save_settings">Save settings</button>
+                </div>
+            </div>
+
+           
+        </form>
+    </div>
+    <!-- <script src="js/options.js"></script> -->
+</body>
+
+</html>
